@@ -51,9 +51,9 @@ def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_vi
                 print("Loading took too much time!")
 
             time.sleep(3)
-            shutil.move(f'{path_dwnlds}/dportal_donors_{i_cntry}.csv',f'{path_csv_dmp}/{i_cntry}_{dp_filename_suffix[i_sttngs]}.csv' )
+            shutil.move(f'{path_dwnlds}/dportal_donors_{i_cntry}.csv',f'{path_csv_dmp}/{i_cntry}_{dp_filename_suffix[i_sttngs]}_{dp_y_view[i_sttngs]}.csv' )
             driver.quit()
-            print(f'file for <{i_cntry}_{dp_filename_suffix[i_sttngs]}> succesfully exported ')
+            print(f'file for <{i_cntry}_{dp_filename_suffix[i_sttngs]}_{dp_y_view[i_sttngs]}> successfully exported ')
 
     timer_end = datetime.datetime.now()
     timer_total = timer_end - timer_start
@@ -144,11 +144,11 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
         time.sleep(1)
         writer.close()
 
-       # i_sector_name = dp_filename_suffix[0]
-       # i_csv_name_bysec = csv_name_dmp_bysec[0]
-        writer = pd.ExcelWriter(f'{path_csv_dmp}/{xlsx_file_name}_BY_FUNDERS_MULTISEC.xlsx', engine='xlsxwriter')
+        #i_sector_name = dp_filename_suffix[0]
+        #i_csv_name_bysec = csv_name_dmp_bysec[0]
+        writer = pd.ExcelWriter(f'{path_csv_dmp}/{xlsx_file_name}_MERGED.xlsx', engine='xlsxwriter')
         for i_sector_name in dp_filename_suffix:
-            csv_name_dmp_bysec = glob.glob(f'{path_csv_dmp}/*_{i_sector_name}.csv')
+            csv_name_dmp_bysec = glob.glob(f'{path_csv_dmp}/*_{i_sector_name}_*.csv')
             df_byfunder_conc = pd.DataFrame()
 
             for i_csv_name_bysec in csv_name_dmp_bysec:
@@ -158,6 +158,7 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
                 #df_byfunder = df_csv.groupby('reporting-org')['total-spend'].sum().to_frame().sort_values(by='total-spend', ascending=False)
                 #df_byfunder.reset_index(inplace=True)
                 #df_byfunder = df_byfunder.rename(columns={'index': 'reporting-org'})
+                df_byfunder.insert(0, f'd-portal name setting', f'{i_csv_name_bysec[70:-4]}')
                 df_byfunder.insert(0, f'country_iso2', f'{i_csv_name_bysec[67:69]}')
                 df_byfunder.insert(0, f'country_name', f'{dp_cntry_full}')
                 df_byfunder.insert((df_byfunder.columns.get_loc('b2023') + 1), f'currency', f'USD')
@@ -174,6 +175,8 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
         time.sleep(1)
         writer.close()
     print(f'xlsx merge for BY FUNDER BY SECTOR csv finished successfully')
+
+    shutil.copyfile(f'{path_csv_dmp}/{xlsx_file_name}_MERGED.xlsx', f'{path_csv_dmp_lvs[:-17]}/{xlsx_file_name}_MERGED.xlsx')
 
     timer_end = datetime.datetime.now()
     timer_total = timer_end - timer_start
@@ -211,7 +214,7 @@ dp_stat_EB =  ['3%2C2%2C1']
 dp_y_min_EB = ['2021']
 dp_y_max_EB = ['2023']
 dp_y_view_EB = ['2021']
-dp_filename_suffix_EB = ['current']
+dp_filename_suffix_EB = ['NCD']
 
 xlsx_file_name_EB = '0_dportal_estefBELLO'
 path_dwnlds_EB = 'C:/Users/hochulir/Downloads'
@@ -227,12 +230,4 @@ path_csv_dmp_EB = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv
 dportal_scraper(dp_cntry_EB, dp_sect_full_EB, dp_stat_EB, dp_y_min_EB, dp_y_max_EB, dp_y_view_EB, dp_filename_suffix_EB, path_dwnlds_EB, path_csv_dmp_EB)
 merge_csvs_multi_sector(xlsx_file_name_EB, path_csv_dmp_EB, dp_filename_suffix_EB)
 
-
-
-
-
-
- # BOOKMARK ==============================================================
-
-# print(tabulate(df, headers='keys', tablefmt='psql'))
 

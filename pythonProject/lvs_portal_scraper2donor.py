@@ -58,7 +58,12 @@ def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_vi
     timer_end = datetime.datetime.now()
     timer_total = timer_end - timer_start
 
-    lines = [f'time stamp d-portal scraper, run at: {datetime.datetime.now()}', f'runtime: {timer_total} h:m:s']
+    lines = [f'time stamp d-portal scraper, run at: {datetime.datetime.now()}', f'runtime: {timer_total} h:m:s',
+             f'> scraper settings:', f'selected countries: {dp_cntry}', f'selected sectors: {dp_sect_full}',
+             f'project status: {dp_stat}', f'time range year start: {dp_y_min}', f'time range year start: {dp_y_max}',
+             f'year set focus: {dp_y_view}', f'filename suffix: {dp_filename_suffix}',
+             f'path "downloads" directory: {path_dwnlds}', f'path "data" directory (moved to): {path_csv_dmp}', ' ']
+
     with open(f'{path_csv_dmp}/0_timestamp.txt', 'w') as f:
         f.write('\n')
         for line in lines:
@@ -164,7 +169,7 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
                 df_byfunder.insert((df_byfunder.columns.get_loc('b2023') + 1), f'currency', f'USD')
 
                 df_byfunder_conc = pd.concat([df_byfunder_conc, df_byfunder])
-                print(f'write to XSLX_BY_FUNDER_MULTISEC > {i_csv_name_bysec[67:-4]}')
+                print(f'write to XSLX_MERGED > {i_csv_name_bysec[67:-4]}')
                 del df_csv, df_byfunder
 
             df_byfunder_conc.to_excel(writer, sheet_name=f'{i_sector_name}', index=False)
@@ -181,7 +186,7 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
     timer_end = datetime.datetime.now()
     timer_total = timer_end - timer_start
 
-    lines = [f'time stamp merge CSVs (multiple sectors selected), run at: {datetime.datetime.now()}', f'runtime: {timer_total} h:m:s']
+    lines = [f'time stamp merge CSVs (multiple sectors), run at: {datetime.datetime.now()}', f'runtime: {timer_total} h:m:s']
     with open(f'{path_csv_dmp}/0_timestamp.txt', 'a') as f:
         f.write('\n')
         for line in lines:
@@ -193,7 +198,7 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix):
 # driver setup LVS
 cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
 cntry_Africa_selection = ['NG', 'GH', 'ZA', 'DZ', 'MA', 'TN', 'LY', 'CD', 'CG', 'GA', 'CF', 'CM', 'TD', 'ER', 'TZ', 'ET', 'UG', 'RW', 'SO']
-dp_cntry_lvs = cntry_Africa_ALL
+dp_cntry_lvs = cntry_Africa_ALL[:2]# cntry_Africa_selection[0:1]
 
 dp_sect_full_lvs = ['', '&sector_group=122%2C121%2C123%2C130']
 dp_stat_lvs =  ['3%2C2%2C1', '3%2C2%2C1']
@@ -224,10 +229,10 @@ path_csv_dmp_EB = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv
 
 
 # RUN SCRAPER
-# dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs, dp_y_max_lvs, dp_y_view_lvs, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
-# merge_csvs_multi_sector(xlsx_file_name_lvs, path_csv_dmp_lvs, dp_filename_suffix_lvs)
+dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs, dp_y_max_lvs, dp_y_view_lvs, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
+merge_csvs_multi_sector(xlsx_file_name_lvs, path_csv_dmp_lvs, dp_filename_suffix_lvs)
 
-dportal_scraper(dp_cntry_EB, dp_sect_full_EB, dp_stat_EB, dp_y_min_EB, dp_y_max_EB, dp_y_view_EB, dp_filename_suffix_EB, path_dwnlds_EB, path_csv_dmp_EB)
-merge_csvs_multi_sector(xlsx_file_name_EB, path_csv_dmp_EB, dp_filename_suffix_EB)
+#dportal_scraper(dp_cntry_EB, dp_sect_full_EB, dp_stat_EB, dp_y_min_EB, dp_y_max_EB, dp_y_view_EB, dp_filename_suffix_EB, path_dwnlds_EB, path_csv_dmp_EB)
+#merge_csvs_multi_sector(xlsx_file_name_EB, path_csv_dmp_EB, dp_filename_suffix_EB)
 
 

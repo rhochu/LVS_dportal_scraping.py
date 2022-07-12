@@ -10,8 +10,16 @@ import tabulate
 from tabulate import tabulate
 
 # parameter setup
+y_focus = f'2021'
+region_focus = 'Africa'
+sector_focus = 'health' # besides the projects for all
+
 path_files = f'G:/My Drive/1_LandscapingValueStreams Africa/data'
-y_focus = '2021'
+lvs_WB_China_other_data = f'China_WorldBank_RocheI7'
+lvs_scraper_data = f'scraper_csv_dmp_LVS_{sector_focus}_{region_focus}_{y_focus}'
+lvs_scraper_filename = f'0_dportal_LVS_{sector_focus}_{region_focus}_{y_focus}_MERGED'
+concatinated_filename = f'LVS_{sector_focus}_{region_focus}_{y_focus}_all_sources_concatinated'
+
 
 # create MAIN data frame
 df_cntry_iso = pd.read_json('https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json')
@@ -23,11 +31,14 @@ df_MAIN = pd.DataFrame.from_dict(d).reset_index().drop(["index"], axis=1)
 
 
 # load relevant data frames for aggregation and change value classes
-df_dp_all = pd.read_excel(f'{path_files}/0_dportal_LVS_MERGED.xlsx', sheet_name='all')
-df_dp_health = pd.read_excel(f'{path_files}/0_dportal_LVS_MERGED.xlsx', sheet_name='health')
-df_chinv = pd.read_excel(f'{path_files}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 1', )
-df_chcon = pd.read_excel(f'{path_files}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 2', )
-df_wb  = pd.read_excel(f'{path_files}/Data_Extract_From_World_Development_Indicators.xlsx')
+df_dp_all = pd.read_excel(f'{path_files}/{lvs_scraper_data}/{lvs_scraper_filename}.xlsx', sheet_name='all')
+df_dp_health = pd.read_excel(f'{path_files}/{lvs_scraper_data}/{lvs_scraper_filename}.xlsx', sheet_name=f'{sector_focus}')
+
+df_chinv = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 1', )
+df_chcon = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 2', )
+df_wb  = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/Data_Extract_From_World_Development_Indicators.xlsx')
+df_roche_affiliates = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/roche_countries_list_I7_Dashboard_updated_April17.xlsx', sheet_name= 'FOR_LVS', index_col= False)
+
 
 
 # transfer "object" class to "string"
@@ -99,7 +110,6 @@ len(add_wb_variables)
 
 # add new empty columns to MAIN that are required later
 
-
 new_colnames_dp = ['dportal_all_USD', 'dportal_all_names', 'dportal_health_USD', 'dportal_health_names']
 new_colnames_ch = ['china_invstm_all_USD', 'china_invstm_all_names', 'china_invstm_health_USD', 'china_invstm_health_names',
                    'china_constr_all_USD','china_constr_all_names', 'china_constr_health_USD', 'china_constr_health_names']
@@ -110,6 +120,7 @@ add_wb_variables = pd.concat([s1,s2])
 
 
 df_MAIN = pd.concat([df_MAIN,pd.DataFrame(columns= ['roche_affiliate'])])
+df_MAIN = pd.concat([df_MAIN,pd.DataFrame(columns= ['roche_affiliate_order'])])
 df_MAIN = pd.concat([df_MAIN,pd.DataFrame(columns= new_colnames_dp)])
 df_MAIN = pd.concat([df_MAIN,pd.DataFrame(columns= new_colnames_ch)])
 df_MAIN = pd.concat([df_MAIN,pd.DataFrame(columns= add_wb_variables)])
@@ -146,6 +157,9 @@ def dportal_to_MAIN(fun_df_dp, fun_MAIN_colname):
 # fun_MAIN_colname = 'china_invstm_all'
 def china_invstm_to_MAIN(fun_df_ch, fun_health_TF, fun_MAIN_colname):
     if fun_health_TF:
+        if sector_focus == 'health': sector_focus_china = 'Health'
+        elif sector_focus == 'ncd': sector_focus_china = 'random_string'
+
         sub_ch = fun_df_ch[(fun_df_ch['Country_iso2'] == i_cntry_iso) & (fun_df_ch['Year'] == f'{y_focus}') & (
                     fun_df_ch['Sector'] == 'Health')].sort_values(by=f'Quantity in Millions', ascending=False)
     elif not fun_health_TF:
@@ -170,7 +184,8 @@ def china_invstm_to_MAIN(fun_df_ch, fun_health_TF, fun_MAIN_colname):
 
 
 
-# transfer data from all sources to MAIN
+# transfer data from all LVS sources to MAIN via functions
+i=0
 for i in range(0,df_MAIN.shape[0]):
     i_cntry_iso = df_MAIN['iso2'][i]
     i_cntry_iso3 = df_MAIN['iso3'][i]
@@ -185,17 +200,39 @@ for i in range(0,df_MAIN.shape[0]):
 
 
     #remaining Development Indicators from WB
-    y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
-    y_focus_minus2 = str(pd.to_numeric(y_focus, errors='coerce') - 2)
+    if y_focus == f'2021':
+        y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
+        y_focus_minus2 = str(pd.to_numeric(y_focus, errors='coerce') - 2)
 
+    elif y_focus == f'2020':
+        y_focus_minus0 = str(pd.to_numeric(y_focus, errors='coerce'))
+        y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
+
+    elif y_focus == f'2019':
+        print('')
+
+    # adding all the information from the world bank df
+    ii = add_wb_variables[0]
     for ii in add_wb_variables:
-        check_year_minus1 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
-        check_year_minus2 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus2}')].values.item()
+        if y_focus == f'2021':
+            check_year_minus1 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
+            check_year_minus2 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus2}')].values.item()
+            if not pd.isnull(check_year_minus1):
+                y_focus_ii = y_focus_minus1
+            elif not pd.isnull(check_year_minus2):
+                y_focus_ii = y_focus_minus2
 
-        if not pd.isnull(check_year_minus1):
-            y_focus_ii = y_focus_minus1
-        elif not pd.isnull(check_year_minus2):
-            y_focus_ii = y_focus_minus2
+        elif y_focus == f'2020':
+            check_year_minus0 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus0}')].values.item()
+            check_year_minus1 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
+            if not pd.isnull(check_year_minus0):
+                y_focus_ii = y_focus_minus0
+            elif not pd.isnull(check_year_minus1):
+                y_focus_ii = y_focus_minus1
+
+        elif y_focus == f'2019':
+                y_focus_ii = y_focus
+
 
         df_MAIN.loc[i, (f'{ii}')] = df_wb[f'{ii}'][(df_wb['Country Code'] == i_cntry_iso3) & (df_wb['Time Code'] == f'YR{y_focus_ii}')].sum()
 
@@ -203,37 +240,79 @@ for i in range(0,df_MAIN.shape[0]):
 
 
 #add year at end of column header
-y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
-y_focus_minus2 = str(pd.to_numeric(y_focus, errors='coerce') - 2)
+if y_focus == f'2021':
+    y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
+    y_focus_minus2 = str(pd.to_numeric(y_focus, errors='coerce') - 2)
 
+elif y_focus == f'2020':
+    y_focus_minus0 = str(pd.to_numeric(y_focus, errors='coerce'))
+    y_focus_minus1 = str(pd.to_numeric(y_focus, errors='coerce') - 1)
+
+elif y_focus == f'2019':
+    print('')
+
+ii = add_wb_variables[0]
 for ii in add_wb_variables:
-    check_year_minus1 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
-    check_year_minus2 = df_wb[f'{ii}'][(df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus2}')].values.item()
+    if y_focus == f'2021':
+        check_year_minus1 = df_wb[f'{ii}'][ (df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
+        check_year_minus2 = df_wb[f'{ii}'][ (df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus2}')].values.item()
+        if not pd.isnull(check_year_minus1):
+            y_focus_ii = y_focus_minus1
+        elif not pd.isnull(check_year_minus2):
+            y_focus_ii = y_focus_minus2
 
-    if not pd.isnull(check_year_minus1):
-        y_focus_ii = y_focus_minus1
-    elif not pd.isnull(check_year_minus2):
-        y_focus_ii = y_focus_minus2
-    df_MAIN.rename(columns={f'{ii}': f'{ii}_{y_focus_ii}'}, inplace = True)
+    elif y_focus == f'2020':
+        check_year_minus0 = df_wb[f'{ii}'][ (df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus0}')].values.item()
+        check_year_minus1 = df_wb[f'{ii}'][ (df_wb['Country Code'] == 'WLD') & (df_wb['Time Code'] == f'YR{y_focus_minus1}')].values.item()
+        if not pd.isnull(check_year_minus0):
+            y_focus_ii = y_focus_minus0
+        elif not pd.isnull(check_year_minus1):
+            y_focus_ii = y_focus_minus1
+
+    elif y_focus == f'2019':
+        y_focus_ii = y_focus
+
+    df_MAIN.rename(columns={f'{ii}': f'{ii}_{y_focus_ii}'}, inplace=True)
+
+
 
 
 
 # add roche affiliate indicator
+
+df_MAIN['roche_affiliate'] = np.nan
+df_MAIN['roche_affiliate'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Affiliate'])] = 'Affiliate'
+df_MAIN['roche_affiliate'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'MSC'])] = 'MSC'
+df_MAIN['roche_affiliate'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Wholesaler'])] = 'Wholesaler'
+df_MAIN['roche_affiliate'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Agent / Distributor'])] = 'Agent / Distributor'
+df_MAIN['roche_affiliate'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'None / Served externally'])] = 'None / Served externally'
+df_MAIN['country_name'][df_MAIN['roche_affiliate'].isna() ]
+
+
+df_MAIN['roche_affiliate_order'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Affiliate'])] = 1
+df_MAIN['roche_affiliate_order'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'MSC'])] = 2
+df_MAIN['roche_affiliate_order'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Wholesaler'])] = 3
+df_MAIN['roche_affiliate_order'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'Agent / Distributor'])] = 4
+df_MAIN['roche_affiliate_order'][df_MAIN['iso3'].isin(  df_roche_affiliates['iso3'][df_roche_affiliates['I7_adjusted'] == 'None / Served externally'])] = 5
+df_MAIN['roche_affiliate_order'][df_MAIN['roche_affiliate'].isna() ]
+
+"""
 ['Algeria','Congo, Democratic Republic of the','Côte d\'Ivoire','Ethiopia','Ghana','Kenya','Liberia','Libya','Morocco','Nigeria','South Africa','Tunisia']
 roche_aff = ['DZ','CD','CI','ET','GH','KE','LR','LY','MA','NG','ZA','TN']
 df_MAIN['roche_affiliate'][df_MAIN['iso2'].isin(roche_aff)] = 1
 df_MAIN['roche_affiliate'][np.invert(df_MAIN['iso2'].isin(roche_aff))] = 0
 df_MAIN['roche_affiliate']
+"""
 
 
 
-
-# excel export
-writer = pd.ExcelWriter(f'{path_files}/all_sources_CONCAT_to_MAIN.xlsx', engine='xlsxwriter')
+# excel export + move above folder
+writer = pd.ExcelWriter(f'{path_files}/{concatinated_filename}.xlsx', engine='xlsxwriter')
 df_MAIN.to_excel(writer, sheet_name= 'concatinated_data', index=False)
 writer.save()
 time.sleep(1)
 writer.close()
+
 
 
 
@@ -245,4 +324,3 @@ print(f'>>> finished concatenated, woop woop :))')
 
 
 
-import main

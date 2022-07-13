@@ -24,7 +24,6 @@ cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Afric
 dp_cntry = cntry_Africa_ALL# cntry_Africa_selection[0:1] # ['KE']
 dp_cntry
 
-
 dp_sect_full = ['&sector_group=122%2C121%2C123%2C130']
 dp_stat =  ['3%2C2%2C1']
 dp_y_min = ['2021']

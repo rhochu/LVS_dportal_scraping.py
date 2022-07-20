@@ -164,7 +164,8 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
 
 #General Scraper Setup
 # Focus Africa
-for i_time_series in range(1993, 2008):
+i_time_series = 2008
+for i_time_series in range(2008, 2008): #1993 - 2008
     print(i_time_series)
 
     cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
@@ -176,8 +177,8 @@ for i_time_series in range(1993, 2008):
     dp_y_max_lvs = [f'{i_time_series +1}', f'{i_time_series +1}', f'{i_time_series +1}']    # ['2022', '2022', '2022']
     dp_y_view_lvs = [f'{i_time_series}', f'{i_time_series}', f'{i_time_series}']            # ['2021', '2021', '2021']
     dp_filename_suffix_lvs = ['all', 'health', 'ncd']
-    path_dwnlds_lvs = 'C:/Users/hochulir/Downloads'
-    path_csv_dmp_lvs = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
+    path_dwnlds_lvs = '/Users/raulhochuli/Downloads'  # 'C:/Users/hochulir/Downloads'
+    path_csv_dmp_lvs = '/Users/raulhochuli/Desktop'   # 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
 
     xlsx_file_name_lvs2021 = '0_dportal_Africa_2021_all_health_ncd'
     y_focus_lvs = [f'{i_time_series}']

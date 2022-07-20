@@ -17,26 +17,37 @@ from tabulate import tabulate
 df_cntry_iso = pd.read_json('https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json')
 
 
+"""
+cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
+
+dp_cntry = dp_cntry_lvs  # cntry_Africa_selection[0:1]
+dp_sect_full = dp_sect_full_lvs
+dp_stat = dp_stat_lvs
+dp_filename_suffix = dp_filename_suffix_lvs
+path_dwnlds = 'C:/Users/hochulir/Downloads'
+path_csv_dmp = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
+dp_y_min =  dp_y_min_lvs2021
+dp_y_max= dp_y_max_lvs2021
+dp_y_view =dp_y_view_lvs2021
+xlsx_file_name = '0_dportal_LVS_health_Africa_2021'
+y_focus = '2021'
+"""
+
 def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_view, dp_filename_suffix, path_dwnlds, path_csv_dmp):
     timer_start = datetime.datetime.now()
     i_counter = 0
+    i_cntry = dp_cntry[0]
     for i_cntry in dp_cntry:
+        i_sttngs =  range(0, len(dp_sect_full))[2]
         for i_sttngs in range(0, len(dp_sect_full)):
 
             if os.path.isfile(f'{path_dwnlds}/dportal_donors_{i_cntry}.csv'):
                 os.remove(f'{path_dwnlds}/dportal_donors_{i_cntry}.csv')
-            #else:
-                #print(f'no <<dportal_donors>> file found')
-                #print()
 
             if not os.path.exists(f'{path_csv_dmp}'):
                 os.mkdir(f'{path_csv_dmp}')
-                print(f'dir <<scaper_dump>> created')
-            #else:
-                #print(f'dir <<scaper_dump>> exists')
-                #print()
-
-            #print(f'country {dp_cntry[i_cntry]} ({i_cntry} of {len(dp_cntry)}), setting: {i_sttngs}')
+            else:
+                print(f'dir <<scaper_dump>> exists')
 
             scrape_URL = f'https://d-portal.org/ctrack.html?country_code={i_cntry}{dp_sect_full[i_sttngs]}&status_code={dp_stat[i_sttngs]}&year_min={dp_y_min[i_sttngs]}&year_max={dp_y_max[i_sttngs]}#view=donors&year={dp_y_view[i_sttngs]}'
             #print(scrape_URL)
@@ -46,7 +57,7 @@ def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_vi
             time.sleep(2)
             try:
                 element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, 'CSV')))
-                #print("Page is ready!")
+
                 element.click()
 
             except TimeoutException:
@@ -75,7 +86,6 @@ def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_vi
         for line in lines:
             f.write(line)
             f.write('\n')
-
 
 
 def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_focus):
@@ -153,29 +163,31 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
 
 
 #General Scraper Setup
-cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
-cntry_Africa_selection = ['NG', 'GH', 'ZA', 'DZ', 'MA', 'TN', 'LY', 'CD', 'CG', 'GA', 'CF', 'CM', 'TD', 'ER', 'TZ', 'ET', 'UG', 'RW', 'SO']
-dp_cntry_lvs = cntry_Africa_ALL  # cntry_Africa_selection[0:1]
-dp_sect_full_lvs = ['', '&sector_group=122%2C121%2C123%2C130']
-dp_stat_lvs =  ['3%2C2%2C1', '3%2C2%2C1']
-dp_filename_suffix_lvs = ['all', 'health']
-path_dwnlds_lvs = 'C:/Users/hochulir/Downloads'
-path_csv_dmp_lvs = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
+# Focus Africa
+for i_time_series in range(1993, 2008):
+    print(i_time_series)
 
+    cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
 
+    dp_cntry_lvs = cntry_Africa_ALL  # cntry_Africa_selection[0:1]
+    dp_sect_full_lvs = ['', '&sector_group=122%2C121%2C123%2C130', '&sector_group=123']
+    dp_stat_lvs =  ['3%2C2%2C1', '3%2C2%2C1', '3%2C2%2C1']
+    dp_y_min_lvs = [f'{i_time_series}', f'{i_time_series}', f'{i_time_series}']             # ['2021', '2021', '2021']
+    dp_y_max_lvs = [f'{i_time_series +1}', f'{i_time_series +1}', f'{i_time_series +1}']    # ['2022', '2022', '2022']
+    dp_y_view_lvs = [f'{i_time_series}', f'{i_time_series}', f'{i_time_series}']            # ['2021', '2021', '2021']
+    dp_filename_suffix_lvs = ['all', 'health', 'ncd']
+    path_dwnlds_lvs = 'C:/Users/hochulir/Downloads'
+    path_csv_dmp_lvs = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
 
+    xlsx_file_name_lvs2021 = '0_dportal_Africa_2021_all_health_ncd'
+    y_focus_lvs = [f'{i_time_series}']
+    folder_rename_dmp = ' Africa'
 
-# Focus Africa 2021
-dp_y_min_lvs2021 =  ['2021', '2021']
-dp_y_max_lvs2021 =  ['2022', '2022']
-dp_y_view_lvs2021 = ['2021', '2021']
-xlsx_file_name_lvs2021 = '0_dportal_LVS_health_Africa_2021'
-y_focus_lvs2021 = '2021'
-"""
-dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2021, dp_y_max_lvs2021, dp_y_view_lvs2021, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
-merge_csvs_multi_sector(xlsx_file_name_lvs2021, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2021 )
-shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_Africa_{y_focus_lvs2021}')
-"""
+    dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs, dp_y_max_lvs, dp_y_view_lvs, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
+
+#merge_csvs_multi_sector(xlsx_file_name_lvs2021, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs )
+#shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_Africa_{y_focus_lvs2021}')
+
 
 
 
@@ -201,11 +213,11 @@ dp_y_max_lvs2019 =  ['2020', '2020']
 dp_y_view_lvs2019 = ['2019', '2019']
 xlsx_file_name_lvs2019 = '0_dportal_LVS_health_Africa_2019'
 y_focus_lvs2019 = '2019'
-
+"""
 dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2019, dp_y_max_lvs2019, dp_y_view_lvs2019, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
 merge_csvs_multi_sector(xlsx_file_name_lvs2019, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2019 )
 shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_Africa_{y_focus_lvs2019}')
-
+"""
 
 
 
@@ -231,11 +243,11 @@ dp_y_max_lvs2019_ncd =  ['2020', '2020']
 dp_y_view_lvs2019_ncd = ['2019', '2019']
 xlsx_file_name_lvs2019_ncd = '0_dportal_LVS_ncd_Africa_2019'
 y_focus_lvs2019_ncd = '2019'
-
+"""
 dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs_ncd, dp_stat_lvs, dp_y_min_lvs2019_ncd, dp_y_max_lvs2019_ncd, dp_y_view_lvs2019_ncd, dp_filename_suffix_lvs_ncd, path_dwnlds_lvs, path_csv_dmp_lvs)
 merge_csvs_multi_sector(xlsx_file_name_lvs2019_ncd, path_csv_dmp_lvs, dp_filename_suffix_lvs_ncd, y_focus_lvs2019_ncd )
 shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_ncd_Africa_{y_focus_lvs2019_ncd}')
-
+"""
 
 
 
@@ -248,10 +260,10 @@ dp_y_max_lvs2021_latam =  ['2022', '2022']
 dp_y_view_lvs2021_latam = ['2021', '2021']
 xlsx_file_name_lvs2021_latam = '0_dportal_LVS_health_LATAM_2021'
 y_focus_lvs2021_latam = '2021'
-
+"""
 dportal_scraper(cntry_LATAM_selection, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2021_latam, dp_y_max_lvs2021_latam, dp_y_view_lvs2021_latam, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
 merge_csvs_multi_sector(xlsx_file_name_lvs2021_latam, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2021_latam )
 shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_LATAM_{y_focus_lvs2021_latam}')
-
+"""
 
 

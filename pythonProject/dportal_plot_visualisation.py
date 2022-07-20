@@ -58,7 +58,7 @@ df_MAIN_lvsUSD_wide['pers_remittances_received_USD_2020'] = df_MAIN_lvsUSD_wide[
 
 fun_df_plot = df_MAIN.copy()
 fields = ['dportal_all_USD', 'china_invstm_all_USD', 'china_constr_all_USD', 'pers_remittances_received_USD_2020']
-colors = ['#1482faff',  '#ed4a0dff', '#fac9b5ff', '#ffd966ff']
+colors = ['#1482faff',  '#ed4a0dff', '#9900ffff', '#ffd966ff']
 colors_affiliate = ['#b4a7d6ff', '#d9d2e9ff', '#bde3ffff', '#1482faff', '#0b41cdff']
 
 labels =['dportal projects', 'china investments', 'china constructions', 'global remittance']
@@ -70,18 +70,20 @@ pcapita_TF = False
 
 #overall plot settings
 bar_width = 0.7
-barfig_width = 7
+barfig_width = 7 #5 #7
 barfig_height = 9
 plt.rc('ytick', labelsize=10)
 plt.rc('xtick', labelsize=10)
-bar_label_size = 7 #0.0001 #7
-bar_label_color=  'dimgray' #'white' #dimgray'
+bar_label_size = 0.0001 #0.0001 #7
+bar_label_color=  'white' #dimgray'
 title_size = 13
 
+barplot_x_axis_label = 'aid & development, million USD'
 
 def barplot_stacked(fun_df_plot,fields, colors, labels, cntry_column, plot_title,  export_TF, row_sum_value_TF, colors_affiliate, pcapita_TF):
     df_plot = fun_df_plot.copy()
-    if not pcapita_TF:
+
+    if (not pcapita_TF):# | (not sector_focus == "ncd"):
         df_plot[fields] = df_plot[fields] / 1000000
 
     df_plot['row_sum'] = df_plot.loc[:, fields].sum(axis = 1)
@@ -132,30 +134,34 @@ def barplot_stacked(fun_df_plot,fields, colors, labels, cntry_column, plot_title
             #for c in ax.containers:
             if not pcapita_TF:
                 bar_labels = [np.around(i, decimals = 1) for i in bar_container.datavalues]#c.datavalues]
-                bar_labels = [v if v > 50 else "" for v in bar_labels]
+                bar_labels = [v if v > 0 else "" for v in bar_labels]
                 bar_labels = [f'{v}' if v != '' else '' for v in bar_labels]
                 bar_labels
             elif pcapita_TF:
                 bar_labels = [np.around(i, decimals = 1) for i in bar_container.datavalues]#c.datavalues]
-                bar_labels = [v if v > 2.5 else "" for v in bar_labels]
+                bar_labels = [v if v > 0 else "" for v in bar_labels]
                 bar_labels = [f'{v}' if v != '' else '' for v in bar_labels]
                 bar_labels
 
-            ax.bar_label(bar_container, labels=bar_labels, padding = 4, fontsize = bar_label_size, color = bar_label_color)
+            ax.bar_label(bar_container,  labels=bar_labels, padding = 4, fontsize = bar_label_size, color = bar_label_color)
 
-        ax.legend(affiliate_list, loc = 'lower right', ncol = 1, frameon=True)
+        if row_sum_value_TF:
+            bar_legend_title = "Roche Entity"
+        elif not row_sum_value_TF:
+            bar_legend_title = ""
+        ax.legend(affiliate_list, title =f'{bar_legend_title}', title_fontsize = 11, loc = 'lower right', ncol = 1, frameon=True)._legend_box.align = 'left'
 
-    np.around(float(123.456), decimals = 0)
 
     # PLOT FINISHES
 
     ax.set_title(f'{plot_title}\n', loc='left', fontsize = title_size)  # title
 
     # x axis
-    if not pcapita_TF:
-        ax.set_xlabel(f'USD million')
-    elif pcapita_TF:
-        ax.set_xlabel(f'USD')
+    ax.set_xlabel(f'{barplot_x_axis_label}')
+    #if not pcapita_TF:
+    #    pass
+    #elif pcapita_TF:
+    #    ax.set_xlabel(f'aid & development payments, USD')
 
     #for tick in ax.get_xticklabels():     # rotation of x ticks
     #    tick.set_rotation(90)
@@ -210,6 +216,7 @@ def barplot_stacked(fun_df_plot,fields, colors, labels, cntry_column, plot_title
             f.write('\n')
 
 
+
 df_plot_1 = df_MAIN.copy()
 fields_1 = ['dportal_all_USD', 'china_invstm_all_USD', 'china_constr_all_USD', 'pers_remittances_received_USD_2020']
 colors_1 = colors
@@ -252,6 +259,25 @@ pcapita_TF_17 = True
 barplot_stacked(df_plot_17, fields_15, colors_1, labels_15, cntry_column_1, plot_title_17, export_TF_1, row_sum_value_TF_1, colors_affiliate_1, pcapita_TF_17 )
 
 
+df_plot_19 = df_MAIN.copy()
+j_gdp = [s for s in df_MAIN.columns.tolist() if 'GDP' in s][0]
+df_plot_19.loc[:, lvsUSD_colnames] = df_plot_19.loc[:, lvsUSD_colnames].div(df_plot_19.loc[:, [j_gdp]].iloc[:, 0], axis=0)
+df_plot_19.loc[:, lvsUSD_colnames] =df_plot_19.loc[:, lvsUSD_colnames]*1000000
+plot_title_19= f'9 Development Flows by affiliate ({sector_focus}, relative to GDP (2020))'
+pcapita_TF_19 = False
+# health flows relative to GDP
+barplot_stacked(df_plot_19, fields_15, colors_1, labels_15, cntry_column_1, plot_title_19, export_TF_1, row_sum_value_TF_1, colors_affiliate_1, pcapita_TF_19 )
+
+
+fields_21 = ['dportal_health_USD']
+colors_21 = ['#1482faff']
+labels_21 =['dportal projects']
+plot_title_21= f'21 Development Flows by affiliate ({sector_focus})'
+pcapita_TF_21 = False
+# ncds only
+barplot_stacked(df_plot_1, fields_21, colors_21, labels_21, cntry_column_1, plot_title_21, export_TF_1, row_sum_value_TF_1, colors_affiliate_1, pcapita_TF_21 )
+
+
 
 
 y_focus = f'2019'
@@ -289,11 +315,11 @@ fun_print_yaxis = 'yaxis'
 """
 
 #overall plot settings
-scatterfig_width = 8
-scatter_height = 8
+scatterfig_width = 7 # 8
+scatter_height = 7
 scatter_marker_size = 50
-scatter_label_size = 5
-scatter_label_color = 'dimgray'
+scatter_label_size = 8
+scatter_label_color = 'darkgray'
 reg_color = 'firebrick'
 reg_lw = 0.5
 reg_style = 'dashed'
@@ -301,7 +327,7 @@ plot_reg_line_TF = True
 
 plt.rc('ytick', labelsize=9)
 plt.rc('xtick', labelsize=9)
-bar_label_size = 1
+#bar_label_size = 1
 title_size = 13
 
 def scatterplot_comparison(fun_df_plot, fields, compare_field, colors_affiliate, markers_affiliate, cntry_column, plot_title, log_values_TF, fun_print_xaxis, fun_print_yaxis, plot_reg_line_TF):
@@ -379,7 +405,8 @@ def scatterplot_comparison(fun_df_plot, fields, compare_field, colors_affiliate,
 
     #  legend1 = ax.legend(*scatter.legend_elements(), loc="upper left", title="Entity")
     # ax.add_artist(legend1)
-    ax.legend(affiliate_list, loc = 'upper left', ncol = 1, frameon=True)
+    ax.legend(affiliate_list, title = f'Roche Entity', title_fontsize= 11, loc = 'upper left', ncol = 1, frameon=True)._legend_box.align = 'left'
+
 
     # title
     ax.set_title(f'{plot_title}\n', loc='left', fontsize = title_size)
@@ -417,7 +444,6 @@ def scatterplot_comparison(fun_df_plot, fields, compare_field, colors_affiliate,
 
 
 
-
 df_plot_50 = df_MAIN_2019.copy()
 df_plot_51 = df_MAIN_2019.copy()
 j_pop_tot = [s for s in df_MAIN_2019.columns.tolist() if 'pop_tot' in s][0]
@@ -433,7 +459,7 @@ plot_yaxis_51 = 'External health expenditures (USD) per capita'
 plot_title_51 = f'51 {sector_focus} expenditures to donations per capita'
 log_values_TF_51 = False
 plot_regline_TF_51 = False
-scatterplot_comparison(df_plot_51, fields_51, compare_field_51, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_51, log_values_TF_51, plot_xaxis_51, plot_yaxis_51, plot_regline_TF_51)
+#scatterplot_comparison(df_plot_51, fields_51, compare_field_51, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_51, log_values_TF_51, plot_xaxis_51, plot_yaxis_51, plot_regline_TF_51)
 
 
 plot_xaxis_52 = 'log Health donations (USD) per capita'
@@ -447,19 +473,19 @@ scatterplot_comparison(df_plot_51, fields_51, compare_field_51, colors_affiliate
 compare_field_53 = ['gov_hex_pcap_USD_2019']
 plot_yaxis_53 = 'log Government health expenditures (USD) per capita'
 plot_title_53 = f'53 {sector_focus} gov to lvs comparison'
-scatterplot_comparison(df_plot_51, fields_51, compare_field_53, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_53, log_values_TF_52, plot_xaxis_52, plot_yaxis_53, plot_regline_TF_52)
+#scatterplot_comparison(df_plot_51, fields_51, compare_field_53, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_53, log_values_TF_52, plot_xaxis_52, plot_yaxis_53, plot_regline_TF_52)
 
 
 compare_field_54 = ['private_hex_pcap_USD_2019']
 plot_yaxis_54 = 'log Private health expenditures (USD) per capita'
 plot_title_54 = f'54 {sector_focus} priv to lvs comparison'
-scatterplot_comparison(df_plot_51, fields_51, compare_field_54, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_54, log_values_TF_52, plot_xaxis_52, plot_yaxis_54, plot_regline_TF_52)
+#scatterplot_comparison(df_plot_51, fields_51, compare_field_54, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_54, log_values_TF_52, plot_xaxis_52, plot_yaxis_54, plot_regline_TF_52)
 
 
 compare_field_55 = ['oop_hex_pcap_USD_2019']
 plot_yaxis_55 = 'log Out-of-Pocket health expenditures (USD) per capita'
 plot_title_55 = f'55 {sector_focus} oop to lvs comparison'
-scatterplot_comparison(df_plot_51, fields_51, compare_field_55, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_55, log_values_TF_52, plot_xaxis_52, plot_yaxis_55, plot_regline_TF_52)
+#scatterplot_comparison(df_plot_51, fields_51, compare_field_55, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_55, log_values_TF_52, plot_xaxis_52, plot_yaxis_55, plot_regline_TF_52)
 
 
 
@@ -476,12 +502,12 @@ plot_xaxis_60 = 'Health donations (USD) per capita'
 plot_yaxis_60 = 'Delta Private -  Out of Pocket health expenditures (USD) per capita'
 log_values_TF_60 = False
 plot_title_60 = f'60 Out-of-Pocket gap to {sector_focus} donations'
-scatterplot_comparison(df_plot_60, fields_60, compare_field_60, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_60, log_values_TF_60, plot_xaxis_60, plot_yaxis_60, plot_regline_TF_52)
+#scatterplot_comparison(df_plot_60, fields_60, compare_field_60, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_60, log_values_TF_60, plot_xaxis_60, plot_yaxis_60, plot_regline_TF_52)
 
 
 df_plot_61 = df_plot_60[df_plot_60['country_name'] !='South Africa']
 plot_title_61 = f'61 Out-of-Pocket gap to {sector_focus} donations (excluding South Africa as outlier)'
-scatterplot_comparison(df_plot_61, fields_60, compare_field_60, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_61, log_values_TF_60, plot_xaxis_60, plot_yaxis_60, plot_regline_TF_52)
+#scatterplot_comparison(df_plot_61, fields_60, compare_field_60, colors_affiliate_51, markers_affiliate_51, cntry_column_51, plot_title_61, log_values_TF_60, plot_xaxis_60, plot_yaxis_60, plot_regline_TF_52)
 
 
 plot_xaxis_62 = 'log Health donations (USD) per capita'
@@ -493,6 +519,8 @@ log_values_TF_62 = True
 
 df_plot_60[fields_60].sum()
 print(tabulate(df_plot_60, headers='keys', tablefmt='psql'))
+
+
 
 
 """

@@ -17,7 +17,7 @@ path_data_files = f'G:/My Drive/1_LandscapingValueStreams Africa/data'
 path_plots = f'G:/My Drive/1_LandscapingValueStreams Africa/data/plots'
 y_focus = f'2021'
 region_focus = 'Africa'
-sector_focus = 'ncd' # besides the projects for all
+sector_focus = 'health' # besides the projects for all
 
 df_MAIN = pd.read_excel(f'{path_data_files}/LVS_{sector_focus}_{region_focus}_{y_focus}_all_sources_concatinated.xlsx', index_col= None)
 
@@ -31,10 +31,10 @@ with open(f'{path_plots}/Development_USD_sums_per_plot.txt', 'w') as f:  # setup
     f.write('\n')
 
 # change country names for too long names in the plot
-df_MAIN['country_name'][df_MAIN['country_name'] == 'Congo, Democratic Republic of the'] = 'Congo, Dem. Rep.'
-df_MAIN['country_name'][df_MAIN['country_name'] == 'Central African Republic'] = 'Central African Rep.'
-df_MAIN['country_name'][df_MAIN['country_name'] == 'Tanzania, United Republic of'] = 'Tanzania, United Rep.'
-df_MAIN['country_name'][df_MAIN['country_name'] == 'Sao Tome and Principe'] = 'Sao Tome & Principe'
+df_MAIN['country_name'][df_MAIN['country_name'] == 'Congo, Democratic Republic of the'] = 'Congo, D.Rep.'
+df_MAIN['country_name'][df_MAIN['country_name'] == 'Central African Republic'] = 'Central Afr.Rep.'
+df_MAIN['country_name'][df_MAIN['country_name'] == 'Tanzania, United Republic of'] = 'Tanzania, U.Rep.'
+df_MAIN['country_name'][df_MAIN['country_name'] == 'Sao Tome and Principe'] = 'Sao Tome & Pr.'
 
 
 # variables to compare to...
@@ -70,10 +70,10 @@ pcapita_TF = False
 
 #overall plot settings
 bar_width = 0.7
-barfig_width = 7 #5 #7
-barfig_height = 9
-plt.rc('ytick', labelsize=10)
-plt.rc('xtick', labelsize=10)
+barfig_width = 6 #5 #7
+barfig_height = 8 # 9
+plt.rc('ytick', labelsize= 10)
+plt.rc('xtick', labelsize= 10)
 bar_label_size = 0.0001 #0.0001 #7
 bar_label_color=  'white' #dimgray'
 title_size = 13

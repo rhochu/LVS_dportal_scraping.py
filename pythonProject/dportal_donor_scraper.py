@@ -17,7 +17,7 @@ from tabulate import tabulate
 df_cntry_iso = pd.read_json('https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json')
 
 
-"""
+
 cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
 
 dp_cntry = dp_cntry_lvs  # cntry_Africa_selection[0:1]
@@ -31,14 +31,14 @@ dp_y_max= dp_y_max_lvs2021
 dp_y_view =dp_y_view_lvs2021
 xlsx_file_name = '0_dportal_LVS_health_Africa_2021'
 y_focus = '2021'
-"""
+
 
 def dportal_scraper(dp_cntry, dp_sect_full, dp_stat, dp_y_min, dp_y_max, dp_y_view, dp_filename_suffix, path_dwnlds, path_csv_dmp):
     timer_start = datetime.datetime.now()
     i_counter = 0
     i_cntry = dp_cntry[0]
     for i_cntry in dp_cntry:
-        i_sttngs =  range(0, len(dp_sect_full))[2]
+        i_sttngs =  range(0, len(dp_sect_full))[0]
         for i_sttngs in range(0, len(dp_sect_full)):
 
             if os.path.isfile(f'{path_dwnlds}/dportal_donors_{i_cntry}.csv'):
@@ -93,8 +93,9 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
     if not os.path.exists(f'{path_csv_dmp}'):
         print(f'Run scraper first! No csvs to merge')
     else:
+        """
         csv_names_dmp = glob.glob(f'{path_csv_dmp}/*.csv')
-
+        
         writer = pd.ExcelWriter(f'{path_csv_dmp}/{xlsx_file_name}_RAW.xlsx', engine='xlsxwriter')
         i_csv_name = csv_names_dmp[0]
         for i_csv_name in csv_names_dmp:
@@ -111,10 +112,12 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
         writer.save()
         time.sleep(1)
         writer.close()
+        """
 
         #i_sector_name = dp_filename_suffix[0]
         #i_csv_name_bysec = csv_name_dmp_bysec[0]
         writer = pd.ExcelWriter(f'{path_csv_dmp}/{xlsx_file_name}_MERGED.xlsx', engine='xlsxwriter')
+
 
         i_sector_name = dp_filename_suffix[0]
         for i_sector_name in dp_filename_suffix:
@@ -125,21 +128,26 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
             for i_csv_name_bysec in csv_name_dmp_bysec:
                 dp_cntry_full = list(df_cntry_iso['name'][df_cntry_iso['alpha-2'] == i_csv_name_bysec[66:68]])[0]
                 df_csv = pd.read_csv(i_csv_name_bysec, thousands=',')
-                df_byfunder = df_csv.sort_values(by = f't{y_focus}', ascending= False)
+                df_byfunder = df_csv.sort_values(by = f't{i_csv_name_bysec[-8:-4]}', ascending= False)
                 #df_byfunder = df_csv.groupby('reporting-org')['total-spend'].sum().to_frame().sort_values(by='total-spend', ascending=False)
                 #df_byfunder.reset_index(inplace=True)
                 #df_byfunder = df_byfunder.rename(columns={'index': 'reporting-org'})
-                df_byfunder.insert(0, f'd-portal name setting', f'{i_csv_name_bysec[69:-4]}')
+                df_byfunder.insert(0, f'sector_name', f'{i_csv_name_bysec[69:-9]}')
+                df_byfunder.insert(0, f'year_focus', f'{i_csv_name_bysec[-8:-4]}')
                 df_byfunder.insert(0, f'country_iso2', f'{i_csv_name_bysec[66:68]}')
                 df_byfunder.insert(0, f'country_name', f'{dp_cntry_full}')
-                df_byfunder.insert((df_byfunder.columns.get_loc(f'b{str(int(y_focus)+2)}') + 1), f'currency', f'USD')
+                df_byfunder.insert((df_byfunder.columns.get_loc(f'b{str(int(i_csv_name_bysec[-8:-4])+2)}') + 1), f'currency', f'USD')
 
+                df_byfunder.columns
+                df_byfunder.columns = ['country_name', 'country_iso2',  'year_focus', 'sector_name', 'crs', 'donor', 'transaction_y-2', 'transaction_y-1', 'transaction_year_focus', 'budget_y+1', 'budget_y+2', 'currency']
 
                 df_byfunder_conc = pd.concat([df_byfunder_conc, df_byfunder])
                 print(f'write to XSLX_MERGED > {i_csv_name_bysec[66:-4]}')
                 del df_csv, df_byfunder
 
-            df_byfunder_conc.to_excel(writer, sheet_name=f'{i_sector_name}', index=False)
+            #df_byfunder_conc.to_excel(writer, sheet_name=f'{i_sector_name}', index=False)
+            df_byfunder_conc.to_excel(writer, sheet_name=f'dportal_export', index=False)
+
             del df_byfunder_conc
 
         print(f' >> xlsx merge for BY FUNDER csv finished successfully')
@@ -161,9 +169,19 @@ def merge_csvs_multi_sector(xlsx_file_name, path_csv_dmp, dp_filename_suffix, y_
             f.write('\n')
 
 
+cntry_Africa_ALL = list(df_cntry_iso['alpha-2'][df_cntry_iso.region.isin(['Africa'])])
+dp_cntry_lvs = cntry_Africa_ALL  # cntry_Africa_selection[0:1]
+dp_sect_full_lvs = ['', '&sector_group=122%2C121%2C123%2C130', '&sector_group=123']
+dp_stat_lvs = ['3%2C2%2C1', '3%2C2%2C1', '3%2C2%2C1']
+dp_filename_suffix_lvs = ['all', 'health', 'ncd']
+path_dwnlds_lvs = 'C:/Users/hochulir/Downloads'
+path_csv_dmp_lvs = 'G:/My Drive/1_LandscapingValueStreams Africa/data/scraper_csv_dmp'
+
+
 
 #General Scraper Setup
-# Focus Africa
+# Focus Africa past 40 years
+"""
 i_time_series = 2008
 for i_time_series in range(2008, 2008): #1993 - 2008
     print(i_time_series)
@@ -188,37 +206,23 @@ for i_time_series in range(2008, 2008): #1993 - 2008
 
 #merge_csvs_multi_sector(xlsx_file_name_lvs2021, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs )
 #shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_Africa_{y_focus_lvs2021}')
-
-
-
-
-
-# Focus 2020
-dp_y_min_lvs2020 =  ['2020', '2020']
-dp_y_max_lvs2020 =  ['2021', '2021']
-dp_y_view_lvs2020 = ['2020', '2020']
-xlsx_file_name_lvs2020 = '0_dportal_LVS_health_Africa_2020'
-y_focus_lvs2020 = '2020'
-"""
-dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2020, dp_y_max_lvs2020, dp_y_view_lvs2020, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
-merge_csvs_multi_sector(xlsx_file_name_lvs2020, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2020 )
-shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_Africa_{y_focus_lvs2020}')
 """
 
 
+# Focus 2021
 
 
-# Focus 2019
-dp_y_min_lvs2019 =  ['2019', '2019']
-dp_y_max_lvs2019 =  ['2020', '2020']
-dp_y_view_lvs2019 = ['2019', '2019']
-xlsx_file_name_lvs2019 = '0_dportal_LVS_health_Africa_2019'
-y_focus_lvs2019 = '2019'
-"""
-dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2019, dp_y_max_lvs2019, dp_y_view_lvs2019, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
-merge_csvs_multi_sector(xlsx_file_name_lvs2019, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2019 )
-shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_Africa_{y_focus_lvs2019}')
-"""
+dp_y_min_lvs2021 =  ['2020'] *len(dp_filename_suffix_lvs)
+dp_y_max_lvs2021 =  ['2021'] *len(dp_filename_suffix_lvs)
+dp_y_view_lvs2021 = ['2021'] *len(dp_filename_suffix_lvs)
+xlsx_file_name_lvs2021 = '0_dportal_LVS_health_Africa_2021'
+y_focus_lvs2021 = '2021'
+
+#dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2021, dp_y_max_lvs2021, dp_y_view_lvs2021, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
+#merge_csvs_multi_sector(xlsx_file_name_lvs2021, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2021 )
+shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_Africa_{y_focus_lvs2021}')
+
+
 
 
 
@@ -238,33 +242,5 @@ shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_ncd_Africa_{y_focus_
 
 
 
-# only NCD for 2019
-dp_y_min_lvs2019_ncd =  ['2019', '2019']
-dp_y_max_lvs2019_ncd =  ['2020', '2020']
-dp_y_view_lvs2019_ncd = ['2019', '2019']
-xlsx_file_name_lvs2019_ncd = '0_dportal_LVS_ncd_Africa_2019'
-y_focus_lvs2019_ncd = '2019'
-"""
-dportal_scraper(dp_cntry_lvs, dp_sect_full_lvs_ncd, dp_stat_lvs, dp_y_min_lvs2019_ncd, dp_y_max_lvs2019_ncd, dp_y_view_lvs2019_ncd, dp_filename_suffix_lvs_ncd, path_dwnlds_lvs, path_csv_dmp_lvs)
-merge_csvs_multi_sector(xlsx_file_name_lvs2019_ncd, path_csv_dmp_lvs, dp_filename_suffix_lvs_ncd, y_focus_lvs2019_ncd )
-shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_ncd_Africa_{y_focus_lvs2019_ncd}')
-"""
-
-
-
-# Focus Latam 2021
-cntry_LATAM_selection = ['AR', 'BB', 'CL', 'CO', 'EC', 'MX', 'PE', 'UY', 'BZ', 'BO', 'CR', 'CU', 'DO', 'SV', 'GT', 'HT', 'HN', 'JM', 'NI', 'PA', 'PY', 'PR', 'TT', 'VE', 'GY']
-dp_cntry_lvs_latam = cntry_LATAM_selection
-
-dp_y_min_lvs2021_latam =  ['2021', '2021']
-dp_y_max_lvs2021_latam =  ['2022', '2022']
-dp_y_view_lvs2021_latam = ['2021', '2021']
-xlsx_file_name_lvs2021_latam = '0_dportal_LVS_health_LATAM_2021'
-y_focus_lvs2021_latam = '2021'
-"""
-dportal_scraper(cntry_LATAM_selection, dp_sect_full_lvs, dp_stat_lvs, dp_y_min_lvs2021_latam, dp_y_max_lvs2021_latam, dp_y_view_lvs2021_latam, dp_filename_suffix_lvs, path_dwnlds_lvs, path_csv_dmp_lvs)
-merge_csvs_multi_sector(xlsx_file_name_lvs2021_latam, path_csv_dmp_lvs, dp_filename_suffix_lvs, y_focus_lvs2021_latam )
-shutil.move(f'{path_csv_dmp_lvs}', f'{path_csv_dmp_lvs}_LVS_health_LATAM_{y_focus_lvs2021_latam}')
-"""
 
 

@@ -178,7 +178,7 @@ def china_invstm_to_MAIN(fun_df_ch, fun_health_TF, fun_MAIN_colname):
                   zip(sub_ch[f'{ch_col_name}'], sub_ch['Quantity in Millions'])]
     donor_string = '; '.join(donor_list[:10])
     df_MAIN.loc[i, (f'{MAIN_col_name}_names')] = donor_string
-    df_MAIN.loc[i, (f'{MAIN_col_name}_USD')] = sub_ch['Quantity in Millions'].sum() * 1000000
+    df_MAIN.loc[i, (f'{MAIN_col_name}_USD')] = sub_ch['Quantity in Millions'].sum() #* 1000000
     df_MAIN.loc[i, (f'{MAIN_col_name}_names')]
     df_MAIN.loc[i, (f'{MAIN_col_name}_USD')]
 

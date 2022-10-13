@@ -520,6 +520,12 @@ log_values_TF_62 = True
 df_plot_60[fields_60].sum()
 print(tabulate(df_plot_60, headers='keys', tablefmt='psql'))
 
+writer = pd.ExcelWriter(f'{path_files}/{name_files}_concatPY.xlsx', engine='xlsxwriter')
+df_fdi.to_excel(writer, sheet_name= 'fDiMarkets', index=False)
+df_fdi_conc.to_excel(writer, sheet_name= 'concatinated_data_by_python', index=False)
+writer.save()
+time.sleep(1)
+writer.close()
 
 
 

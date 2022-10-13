@@ -9,16 +9,18 @@ import tabulate
 
 from tabulate import tabulate
 
-# parameter setup
+# MANUAL ENTRY!!
 y_focus = f'2021'
 region_focus = 'Africa'
-sector_focus = 'health' # besides the projects for all
+lvs_scraper_data = f'scraper_csv_dump_LVS_all_health_ncd_2021' #'scraper_csv_dmp_LVS_{sector_focus}_{region_focus}_{y_focus}'
+lvs_scraper_filename = f'0_dportal_LVS_all_health_ncd_Africa_2021_MERGED'  #'0_dportal_LVS_{sector_focus}_{region_focus}_{y_focus}_MERGED'
+concatinated_filename = f'LVS_all_health_ncd_Africa_2021_all_sources_concatinated'
 
-path_files = f'G:/My Drive/1_LandscapingValueStreams Africa/data'
+
+# remaining parameter setup
+path_files = f'G:/My Drive/1_LandscapingValueStreams Africa/data_donors'
 lvs_WB_China_other_data = f'China_WorldBank_RocheI7'
-lvs_scraper_data = f'scraper_csv_dmp_LVS_{sector_focus}_{region_focus}_{y_focus}'
-lvs_scraper_filename = f'0_dportal_LVS_{sector_focus}_{region_focus}_{y_focus}_MERGED'
-concatinated_filename = f'LVS_{sector_focus}_{region_focus}_{y_focus}_all_sources_concatinated'
+sector_focus = 'health' # besides the projects for all and NCD
 
 
 # create MAIN data frame
@@ -31,8 +33,12 @@ df_MAIN = pd.DataFrame.from_dict(d).reset_index().drop(["index"], axis=1)
 
 
 # load relevant data frames for aggregation and change value classes
-df_dp_all = pd.read_excel(f'{path_files}/{lvs_scraper_data}/{lvs_scraper_filename}.xlsx', sheet_name='all')
-df_dp_health = pd.read_excel(f'{path_files}/{lvs_scraper_data}/{lvs_scraper_filename}.xlsx', sheet_name=f'{sector_focus}')
+df_dp_scraper = pd.read_excel(f'{path_files}/{lvs_scraper_data}/{lvs_scraper_filename}.xlsx')
+df_dp_scraper.keys()
+df_dp_all =     df_dp_scraper[df_dp_scraper['sector_name'] == 'all']
+df_dp_health =  df_dp_scraper[df_dp_scraper['sector_name'] == 'health']
+df_dp_ncd =     df_dp_scraper[df_dp_scraper['sector_name'] == 'ncd']
+
 
 df_chinv = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 1', )
 df_chcon = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/China-Global-Investment-Tracker-2021-Fall-FINAL-2022.2.21-update.xlsx', skiprows = range(0,5), sheet_name= 'Dataset 2', )
@@ -40,11 +46,11 @@ df_wb  = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/Data_Extract_Fro
 df_roche_affiliates = pd.read_excel(f'{path_files}/{lvs_WB_China_other_data}/roche_countries_list_I7_Dashboard_updated_April17.xlsx', sheet_name= 'FOR_LVS', index_col= False)
 
 
-
+df_dp_scraper.keys()
 # transfer "object" class to "string"
-df_dp_all[['country_name', 'country_iso2', 'd-portal name setting', 'donor', 'currency' ]] = df_dp_all[['country_name', 'country_iso2', 'd-portal name setting', 'donor', 'currency' ]].astype("string")
+df_dp_all[['country_name', 'country_iso2', 'sector_name', 'donor', 'currency' ]] = df_dp_all[['country_name', 'country_iso2', 'sector_name', 'donor', 'currency' ]].astype("string")
 df_dp_all.dtypes
-df_dp_health[['country_name', 'country_iso2', 'd-portal name setting', 'donor', 'currency' ]] = df_dp_health[['country_name', 'country_iso2', 'd-portal name setting', 'donor', 'currency' ]].astype("string")
+df_dp_health[['country_name', 'country_iso2', 'sector_name', 'donor', 'currency' ]] = df_dp_health[['country_name', 'country_iso2', 'sector_name', 'donor', 'currency' ]].astype("string")
 df_dp_health.dtypes
 df_chinv[['Year', 'Month', 'Investor', 'Share Size', 'Transaction Party', 'Sector', 'Subsector', 'Country', 'Country_iso2', 'Country_iso_full', 'Region', 'Greenfield' ]] = df_chinv[['Year', 'Month', 'Investor', 'Share Size', 'Transaction Party', 'Sector', 'Subsector', 'Country', 'Country_iso2', 'Country_iso_full', 'Region', 'Greenfield' ]].astype("string")
 df_chinv.dtypes
@@ -110,7 +116,7 @@ len(add_wb_variables)
 
 # add new empty columns to MAIN that are required later
 
-new_colnames_dp = ['dportal_all_USD', 'dportal_all_names', 'dportal_health_USD', 'dportal_health_names']
+new_colnames_dp = ['dportal_all_USD', 'dportal_all_names', 'dportal_health_USD', 'dportal_health_names', 'dportal_ncd_USD', 'dportal_ncd_names']
 new_colnames_ch = ['china_invstm_all_USD', 'china_invstm_all_names', 'china_invstm_health_USD', 'china_invstm_health_names',
                    'china_constr_all_USD','china_constr_all_names', 'china_constr_health_USD', 'china_constr_health_names']
 
@@ -133,12 +139,13 @@ df_MAIN.columns
 
 i = 41
 print(df_MAIN['country_name'][i], df_MAIN['iso2'][i])
-i_cntry_iso = df_MAIN['iso2'][i]
-i_cntry_iso3 = df_MAIN['iso3'][i]
+#i_cntry_iso = df_MAIN['iso2'][i]
+#i_cntry_iso3 = df_MAIN['iso3'][i]
+#fun_df_dp = df_dp_all
+#fun_MAIN_colname = 'dportal_all'
 
-# fun_df_dp = df_dp_all
-# fun_MAIN_colname = 'dportal_all'
 def dportal_to_MAIN(fun_df_dp, fun_MAIN_colname):
+    """
     sub_dp = fun_df_dp[fun_df_dp['country_iso2'] == i_cntry_iso].sort_values(by=f't{y_focus}', ascending=False)
     MAIN_col_name = fun_MAIN_colname
 
@@ -147,6 +154,18 @@ def dportal_to_MAIN(fun_df_dp, fun_MAIN_colname):
     donor_string = '; '.join(donor_list[:10])
     df_MAIN.loc[i, (f'{MAIN_col_name}_names')] = donor_string
     df_MAIN.loc[i, (f'{MAIN_col_name}_USD')] = sub_dp[f't{y_focus}'].sum()
+    df_MAIN.loc[i, (f'{MAIN_col_name}_names')]
+    df_MAIN.loc[i, (f'{MAIN_col_name}_USD')]
+    """
+    # copy pasted because the column name for the focused year is different. but better kept before deleting in case i still need the code again
+    sub_dp = fun_df_dp[fun_df_dp['country_iso2'] == i_cntry_iso].sort_values(by=f'year_focus', ascending=False)
+    MAIN_col_name = fun_MAIN_colname
+
+    donor_list = [f'{donor_name} (USD {donor_amount})' for donor_name, donor_amount in
+                  zip(sub_dp['donor'], sub_dp[f'year_focus'])]
+    donor_string = '; '.join(donor_list[:10])
+    df_MAIN.loc[i, (f'{MAIN_col_name}_names')] = donor_string
+    df_MAIN.loc[i, (f'{MAIN_col_name}_USD')] = sub_dp[f'year_focus'].sum()
     df_MAIN.loc[i, (f'{MAIN_col_name}_names')]
     df_MAIN.loc[i, (f'{MAIN_col_name}_USD')]
 
@@ -189,9 +208,11 @@ i=0
 for i in range(0,df_MAIN.shape[0]):
     i_cntry_iso = df_MAIN['iso2'][i]
     i_cntry_iso3 = df_MAIN['iso3'][i]
+    print(i_cntry_iso, i_cntry_iso3)
 
     dportal_to_MAIN(df_dp_all, 'dportal_all')
     dportal_to_MAIN(df_dp_health, 'dportal_health')
+    dportal_to_MAIN(df_dp_ncd, 'dportal_ncd')
 
     china_invstm_to_MAIN(df_chinv, False, 'china_invstm_all')
     china_invstm_to_MAIN(df_chinv, True,  'china_invstm_health')
